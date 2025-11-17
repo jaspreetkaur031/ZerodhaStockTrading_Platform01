@@ -1,6 +1,5 @@
 import React, { useState, useContext } from "react";
 
-// Removed unused 'axios' import
 import GeneralContext from "./GeneralContext";
 
 import { Tooltip, Grow } from "@mui/material";
@@ -17,9 +16,6 @@ import { DoughnutChart } from "./DoughnoutChart";
 
 const labels = watchlist.map((subArray) => subArray["name"]);
 
-// --- Performance Fix ---
-// Moved 'data' object outside the component.
-// This prevents it from being re-created on every render.
 const data = {
   labels,
   datasets: [
@@ -48,8 +44,6 @@ const data = {
 };
 
 const WatchList = () => {
-  // 'data' object was removed from here
-
   return (
     <div className="watchlist-container">
       <div className="search-container">
@@ -96,27 +90,29 @@ const WatchListItem = ({ stock }) => {
           {stock.isDown ? (
             <KeyboardArrowDown className="down" />
           ) : (
-            <KeyboardArrowUp className="up" /> // Your fix is correct
+            <KeyboardArrowUp className="up" />
           )}
           <span className="price">{stock.price}</span>
         </div>
       </div>
-      {showWatchlistActions && <WatchListActions uid={stock.name} />}
+      {/* 1. Pass the whole 'stock' object */}
+      {showWatchlistActions && <WatchListActions stock={stock} />}
     </li>
   );
 };
 
-const WatchListActions = ({ uid }) => {
+// 2. Receive the 'stock' object
+const WatchListActions = ({ stock }) => {
   const generalContext = useContext(GeneralContext);
 
   const handleBuyClick = () => {
-    generalContext.openBuyWindow(uid);
+    // 3. FIX: Pass BOTH stock.name and stock.price
+    generalContext.openBuyWindow(stock.name, stock.price);
   };
 
-  // --- FIX: Added handleSellClick ---
   const handleSellClick = () => {
-    // This assumes you will add `openSellWindow` to your GeneralContext
-    generalContext.openSellWindow(uid); 
+    // 4. This is correct: ONLY pass the stock name
+    generalContext.openSellWindow(stock.name); 
   };
 
   return (
@@ -127,7 +123,7 @@ const WatchListActions = ({ uid }) => {
           placement="top"
           arrow
           TransitionComponent={Grow}
-          onClick={handleBuyClick}
+          onClick={handleBuyClick} // This now sends the price
         >
           <button className="buy">Buy</button>
         </Tooltip>
@@ -136,7 +132,7 @@ const WatchListActions = ({ uid }) => {
           placement="top"
           arrow
           TransitionComponent={Grow}
-          onClick={handleSellClick} // <-- FIX: Added onClick handler
+          onClick={handleSellClick} // This only sends the name
         >
           <button className="sell">Sell</button>
         </Tooltip>
